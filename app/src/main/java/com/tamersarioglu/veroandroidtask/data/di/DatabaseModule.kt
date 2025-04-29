@@ -1,7 +1,9 @@
-package com.tamersarioglu.veroandroidtask.data.local
+package com.tamersarioglu.veroandroidtask.data.di
 
 import android.content.Context
 import androidx.room.Room
+import com.tamersarioglu.veroandroidtask.data.local.AppDatabase
+import com.tamersarioglu.veroandroidtask.data.local.TaskDao
 import dagger.Module
 import dagger.Provides
 import dagger.hilt.InstallIn

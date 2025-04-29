@@ -1,4 +1,4 @@
-package com.tamersarioglu.veroandroidtask.data.api
+package com.tamersarioglu.veroandroidtask.data.di
 
 import com.tamersarioglu.veroandroidtask.data.repository.TaskRepositoryImpl
 import com.tamersarioglu.veroandroidtask.domain.repository.TaskRepository
@@ -9,11 +9,11 @@ import dagger.hilt.components.SingletonComponent
 import javax.inject.Singleton
 
 @Module
-@InstallIn(SingletonComponent::class) // Or another appropriate component
+@InstallIn(SingletonComponent::class)
 abstract class RepositoryModule {
 
     @Binds
-    @Singleton // Scope should match the implementation scope and where it's needed
+    @Singleton
     abstract fun bindTaskRepository(
         taskRepositoryImpl: TaskRepositoryImpl
     ): TaskRepository
