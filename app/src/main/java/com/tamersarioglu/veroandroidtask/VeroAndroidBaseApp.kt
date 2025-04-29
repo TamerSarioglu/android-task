@@ -42,5 +42,7 @@ class VeroAndroidBaseApp: Application(), Configuration.Provider {
     }
 
     override val workManagerConfiguration: Configuration
-        get() = TODO("Not yet implemented")
+        get() = Configuration.Builder()
+            .setWorkerFactory(workerFactory)
+            .build()
 }
