@@ -4,7 +4,8 @@ import androidx.room.TypeConverter
 import com.google.gson.Gson
 import com.google.gson.reflect.TypeToken
 
-class MapTypeConverter {class MapTypeConverter {
+class MapTypeConverter {
+
     private val gson = Gson()
 
     @TypeConverter
@@ -17,5 +18,4 @@ class MapTypeConverter {class MapTypeConverter {
     fun fromMap(map: Map<String, String>): String {
         return gson.toJson(map)
     }
-}
 }
