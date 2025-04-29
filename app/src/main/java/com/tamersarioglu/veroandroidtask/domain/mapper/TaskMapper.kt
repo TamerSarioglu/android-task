@@ -8,17 +8,24 @@ import java.util.UUID
 import androidx.core.graphics.toColorInt
 
 fun TaskDto.toEntity(): TaskEntity {
+    // Store any potential additional properties
     val additionalProps = mutableMapOf<String, String>()
-    properties?.forEach { (key, value) ->
-        additionalProps[key] = value.toString()
-    }
 
     return TaskEntity(
-        id = id ?: UUID.randomUUID().toString(),
+        id = UUID.randomUUID().toString(),
         task = task,
         title = title,
         description = description,
         colorCode = colorCode,
+        sort = sort,
+        wageType = wageType,
+        businessUnitKey = businessUnitKey,
+        businessUnit = businessUnit,
+        parentTaskID = parentTaskID,
+        preplanningBoardQuickSelect = preplanningBoardQuickSelect,
+        workingTime = workingTime,
+        isAvailableInTimeTrackingKioskMode = isAvailableInTimeTrackingKioskMode,
+        isAbstract = isAbstract,
         additionalProperties = additionalProps
     )
 }
@@ -31,12 +38,23 @@ fun TaskEntity.toTask(): Task {
         description = description,
         colorCode = colorCode,
         color = parseColor(colorCode),
+        sort = sort,
+        wageType = wageType,
+        businessUnitKey = businessUnitKey,
+        businessUnit = businessUnit,
+        parentTaskID = parentTaskID,
+        preplanningBoardQuickSelect = preplanningBoardQuickSelect,
+        workingTime = workingTime,
+        isAvailableInTimeTrackingKioskMode = isAvailableInTimeTrackingKioskMode,
+        isAbstract = isAbstract,
         additionalProperties = additionalProperties
     )
 }
 
-fun parseColor(colorCode: String): Color {
+fun parseColor(colorCode: String?): Color {
     return try {
+        if (colorCode.isNullOrBlank()) return Color.Gray
+
         val code = colorCode.replace("#", "")
         val color = "#$code".toColorInt()
         Color(color)
