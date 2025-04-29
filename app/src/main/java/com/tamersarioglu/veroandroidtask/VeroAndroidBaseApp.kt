@@ -1,23 +1,23 @@
 package com.tamersarioglu.veroandroidtask
 
 import android.app.Application
-import androidx.hilt.work.HiltWorkerFactory
 import androidx.work.Configuration
 import androidx.work.Constraints
 import androidx.work.ExistingPeriodicWorkPolicy
 import androidx.work.NetworkType
 import androidx.work.PeriodicWorkRequestBuilder
 import androidx.work.WorkManager
+import com.tamersarioglu.veroandroidtask.data.worker.CustomWorkerFactory
 import com.tamersarioglu.veroandroidtask.data.worker.TaskSyncWorker
 import dagger.hilt.android.HiltAndroidApp
 import java.util.concurrent.TimeUnit
 import javax.inject.Inject
 
 @HiltAndroidApp
-class VeroAndroidBaseApp: Application(), Configuration.Provider {
+class VeroAndroidBaseApp: Application() {
 
     @Inject
-    lateinit var workerFactory: HiltWorkerFactory
+    lateinit var customWorkerFactory: CustomWorkerFactory
 
     override fun onCreate() {
         super.onCreate()
@@ -40,9 +40,4 @@ class VeroAndroidBaseApp: Application(), Configuration.Provider {
             periodicWorkRequest
         )
     }
-
-    override val workManagerConfiguration: Configuration
-        get() = Configuration.Builder()
-            .setWorkerFactory(workerFactory)
-            .build()
 }

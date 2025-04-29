@@ -6,7 +6,7 @@ import androidx.room.TypeConverters
 import com.tamersarioglu.veroandroidtask.data.local.converter.MapTypeConverter
 import com.tamersarioglu.veroandroidtask.data.model.entity.TaskEntity
 
-@Database(entities = [TaskEntity::class], version = 1, exportSchema = false)
+@Database(entities = [TaskEntity::class], version = 2, exportSchema = false)
 @TypeConverters(MapTypeConverter::class)
 abstract class AppDatabase : RoomDatabase() {
     abstract fun taskDao(): TaskDao

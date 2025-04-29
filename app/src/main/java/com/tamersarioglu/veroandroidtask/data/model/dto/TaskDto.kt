@@ -1,11 +1,44 @@
 package com.tamersarioglu.veroandroidtask.data.model.dto
 
+import com.google.gson.annotations.SerializedName
+
 data class TaskDto(
+    @SerializedName("task")
     val task: String,
-    val title: String,
-    val description: String,
-    val colorCode: String,
-    // We'll add other fields as we discover them from the API response
-    val id: String? = null,
-    val properties: Map<String, Any>? = null  // For storing other properties that might be in the response
+
+    @SerializedName("title")
+    val title: String?,
+
+    @SerializedName("description")
+    val description: String?,
+
+    @SerializedName("sort")
+    val sort: String?, // Kept as String as it appears as "0"
+
+    @SerializedName("wageType")
+    val wageType: String?,
+
+    @SerializedName("BusinessUnitKey")
+    val businessUnitKey: String?,
+
+    @SerializedName("businessUnit")
+    val businessUnit: String?,
+
+    @SerializedName("parentTaskID")
+    val parentTaskID: String?,
+
+    @SerializedName("preplanningBoardQuickSelect")
+    val preplanningBoardQuickSelect: String?, // Type inferred as String? due to null
+
+    @SerializedName("colorCode")
+    val colorCode: String?,
+
+    @SerializedName("workingTime")
+    val workingTime: String?, // Type inferred as String? due to null
+
+    @SerializedName("isAvailableInTimeTrackingKioskMode")
+    val isAvailableInTimeTrackingKioskMode: Boolean,
+
+    @SerializedName("isAbstract")
+    val isAbstract: Boolean
 )

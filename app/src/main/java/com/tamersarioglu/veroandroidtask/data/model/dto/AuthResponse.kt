@@ -1,26 +1,28 @@
 package com.tamersarioglu.veroandroidtask.data.model.dto
 
+import com.google.gson.annotations.SerializedName
+
 data class AuthResponse(
-    val oauth: OAuthData,
-    val userInfo: UserInfo,
-    val permissions: List<String>,
-    val apiVersion: String,
-    val showPasswordPrompt: Boolean
+    @SerializedName("oauth") val oauth: OAuthData,
+    @SerializedName("userInfo") val userInfo: UserInfo,
+    @SerializedName("permissions") val permissions: List<String>,
+    @SerializedName("apiVersion") val apiVersion: String,
+    @SerializedName("showPasswordPrompt") val showPasswordPrompt: Boolean
 )
 
 data class OAuthData(
-    val access_token: String,
-    val expires_in: Int,
-    val token_type: String,
-    val scope: String?,
-    val refresh_token: String
+    @SerializedName("access_token") val access_token: String,
+    @SerializedName("expires_in") val expires_in: Int,
+    @SerializedName("token_type") val token_type: String,
+    @SerializedName("scope") val scope: String?,
+    @SerializedName("refresh_token") val refresh_token: String
 )
 
 data class UserInfo(
-    val personalNo: Int,
-    val firstName: String,
-    val lastName: String,
-    val displayName: String,
-    val active: Boolean,
-    val businessUnit: String
+    @SerializedName("personalNo") val personalNo: Int,
+    @SerializedName("firstName") val firstName: String,
+    @SerializedName("lastName") val lastName: String,
+    @SerializedName("displayName") val displayName: String,
+    @SerializedName("active") val active: Boolean,
+    @SerializedName("businessUnit") val businessUnit: String
 )
