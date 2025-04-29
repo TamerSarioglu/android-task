@@ -1,7 +1,9 @@
-package com.tamersarioglu.veroandroidtask.data.api
+package com.tamersarioglu.veroandroidtask.data.di
 
 import android.content.Context
 import android.content.SharedPreferences
+import com.tamersarioglu.veroandroidtask.data.api.ApiService
+import com.tamersarioglu.veroandroidtask.data.api.AuthInterceptor
 import com.tamersarioglu.veroandroidtask.utils.Constants
 import dagger.Module
 import dagger.Provides

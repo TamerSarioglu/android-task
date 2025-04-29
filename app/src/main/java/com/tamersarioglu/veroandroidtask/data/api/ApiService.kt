@@ -18,7 +18,5 @@ interface ApiService {
     ): Response<AuthResponse>
 
     @GET("dev/index.php/v1/tasks/select")
-    suspend fun getTasks(
-        @Header("Authorization") bearerToken: String
-    ): Response<List<TaskDto>>
+    suspend fun getTasks(): Response<List<TaskDto>>
 }

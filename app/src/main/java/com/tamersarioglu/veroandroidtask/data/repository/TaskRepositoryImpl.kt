@@ -15,12 +15,14 @@ import androidx.core.content.edit
 import com.tamersarioglu.veroandroidtask.domain.mapper.toEntity
 import com.tamersarioglu.veroandroidtask.domain.mapper.toTask
 import kotlinx.coroutines.flow.map
+import kotlinx.coroutines.flow.flow
 
 class TaskRepositoryImpl @Inject constructor(
     private val api: ApiService,
     private val dao: TaskDao,
     private val prefs: SharedPreferences
 ) : TaskRepository {
+
     override suspend fun login(
         username: String,
         password: String
@@ -56,7 +58,7 @@ class TaskRepositoryImpl @Inject constructor(
             ?: return Resource.Error("Not authenticated")
 
         return try {
-            val response = api.getTasks("Bearer $token")
+            val response = api.getTasks()
 
             if (response.isSuccessful) {
                 val tasks = response.body()
@@ -76,9 +78,35 @@ class TaskRepositoryImpl @Inject constructor(
         }
     }
 
-    override fun getTasks(): Flow<Resource<List<Task>>> {
-        return dao.getAllTasks().map { entities ->
-            Resource.Success(entities.map { it.toTask() })
+    override fun getTasks(): Flow<Resource<List<Task>>> = flow {
+        try {
+            emit(Resource.Loading())
+            dao.getAllTasks().collect { entities ->
+                if (entities.isEmpty()) {
+                    // If no tasks in database, try to refresh from API
+                    val token = prefs.getString(Constants.AUTH_TOKEN_KEY, null)
+                        ?: throw Exception("Not authenticated")
+                    
+                    val response = api.getTasks()
+                    if (response.isSuccessful) {
+                        val tasks = response.body()
+                        if (tasks != null) {
+                            val newEntities = tasks.map { it.toEntity() }
+                            dao.clearAllTasks()
+                            dao.insertTasks(newEntities)
+                            emit(Resource.Success(newEntities.map { it.toTask() }))
+                        } else {
+                            emit(Resource.Error("No tasks available"))
+                        }
+                    } else {
+                        emit(Resource.Error("Failed to fetch tasks: ${response.code()} ${response.message()}"))
+                    }
+                } else {
+                    emit(Resource.Success(entities.map { it.toTask() }))
+                }
+            }
+        } catch (e: Exception) {
+            emit(Resource.Error("Error loading tasks: ${e.message}"))
         }
     }
 
