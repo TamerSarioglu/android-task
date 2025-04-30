@@ -36,6 +36,8 @@ import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.material3.TextField
 import com.tamersarioglu.veroandroidtask.presentation.qrscanner.QrScannerScreen
+import androidx.compose.material3.pulltorefresh.PullToRefreshBox
+import androidx.compose.material3.pulltorefresh.rememberPullToRefreshState
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -46,7 +48,6 @@ fun TaskListScreen(
     val tasksState by viewModel.tasksState.collectAsState()
     val searchQuery by viewModel.searchQuery.collectAsState()
     val isSearching = remember { mutableStateOf(false) }
-    val searchText = remember { mutableStateOf("") }
     val showQrScanner = remember { mutableStateOf(false) }
 
     Scaffold(
@@ -55,11 +56,8 @@ fun TaskListScreen(
                 title = {
                     if (isSearching.value) {
                         TextField(
-                            value = searchText.value,
-                            onValueChange = {
-                                searchText.value = it
-                                viewModel.searchTasks(it)
-                            },
+                            value = searchQuery,
+                            onValueChange = { viewModel.searchTasks(it) },
                             placeholder = { Text("Search tasks...") },
                             singleLine = true,
                             modifier = Modifier.fillMaxSize()
@@ -72,8 +70,7 @@ fun TaskListScreen(
                     if (isSearching.value) {
                         IconButton(onClick = {
                             isSearching.value = false
-                            searchText.value = ""
-                            viewModel.searchTasks("")
+                            viewModel.searchTasks("")  // Clear search directly
                         }) {
                             Icon(Icons.Default.Search, contentDescription = "Close Search")
                         }
@@ -95,8 +92,7 @@ fun TaskListScreen(
         if (showQrScanner.value) {
             QrScannerScreen(
                 onQrScanned = { qrValue ->
-                    searchText.value = qrValue
-                    viewModel.searchTasks(qrValue)
+                    viewModel.searchTasks(qrValue)  // Use ViewModel directly
                     isSearching.value = true
                     showQrScanner.value = false
                 },
@@ -142,19 +138,33 @@ fun TaskListScreen(
                     }
                     is Resource.Success -> {
                         val tasks = (tasksState as Resource.Success<List<Task>>).data ?: emptyList()
-                        if (tasks.isEmpty()) {
-                            Box(
-                                modifier = Modifier.fillMaxSize(),
-                                contentAlignment = Alignment.Center
-                            ) {
-                                Text("No tasks available")
-                            }
-                        } else {
-                            LazyColumn(
-                                modifier = Modifier.fillMaxSize()
-                            ) {
-                                items(tasks) { task ->
-                                    TaskItem(task = task)
+                        val isRefreshing = false
+                        val pullToRefreshState = rememberPullToRefreshState()
+
+                        PullToRefreshBox(
+                            state = pullToRefreshState,
+                            isRefreshing = isRefreshing,
+                            onRefresh = { viewModel.refreshTasks() }
+                        ) {
+                            if (tasks.isEmpty()) {
+                                Box(
+                                    modifier = Modifier.fillMaxSize(),
+                                    contentAlignment = Alignment.Center
+                                ) {
+                                    // Display appropriate message based on whether user is searching
+                                    if (searchQuery.isNotEmpty()) {
+                                        Text("No tasks found for \"$searchQuery\"")
+                                    } else {
+                                        Text("No tasks available")
+                                    }
+                                }
+                            } else {
+                                LazyColumn(
+                                    modifier = Modifier.fillMaxSize()
+                                ) {
+                                    items(tasks) { task ->
+                                        TaskItem(task = task)
+                                    }
                                 }
                             }
                         }
