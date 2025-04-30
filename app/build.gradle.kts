@@ -79,4 +79,10 @@ dependencies {
 
     //Material icons
     implementation("androidx.compose.material:material-icons-extended:1.7.8")
+
+    //ML Kit Barcode Scanning and CameraX for QR code scanning
+    implementation("com.google.mlkit:barcode-scanning:17.2.0")
+    implementation("androidx.camera:camera-camera2:1.3.2")
+    implementation("androidx.camera:camera-lifecycle:1.3.2")
+    implementation("androidx.camera:camera-view:1.3.2")
 }
