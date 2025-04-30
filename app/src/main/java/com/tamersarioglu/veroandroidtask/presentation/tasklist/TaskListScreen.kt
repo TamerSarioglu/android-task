@@ -10,6 +10,7 @@ import androidx.compose.foundation.lazy.items
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.Logout
 import androidx.compose.material.icons.filled.Search
+import androidx.compose.material.icons.filled.QrCodeScanner
 import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.Icon
@@ -34,6 +35,7 @@ import androidx.compose.foundation.layout.height
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.material3.TextField
+import com.tamersarioglu.veroandroidtask.presentation.qrscanner.QrScannerScreen
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -45,6 +47,7 @@ fun TaskListScreen(
     val searchQuery by viewModel.searchQuery.collectAsState()
     val isSearching = remember { mutableStateOf(false) }
     val searchText = remember { mutableStateOf("") }
+    val showQrScanner = remember { mutableStateOf(false) }
 
     Scaffold(
         topBar = {
@@ -79,6 +82,9 @@ fun TaskListScreen(
                             Icon(Icons.Default.Search, contentDescription = "Search")
                         }
                     }
+                    IconButton(onClick = { showQrScanner.value = true }) {
+                        Icon(Icons.Default.QrCodeScanner, contentDescription = "Scan QR Code")
+                    }
                     IconButton(onClick = onLogout) {
                         Icon(Icons.AutoMirrored.Filled.Logout, contentDescription = "Logout")
                     }
@@ -86,58 +92,70 @@ fun TaskListScreen(
             )
         }
     ) { padding ->
-        Box(
-            modifier = Modifier
-                .fillMaxSize()
-                .padding(padding)
-        ) {
-            when (tasksState) {
-                is Resource.Loading -> {
-                    Box(
-                        modifier = Modifier.fillMaxSize(),
-                        contentAlignment = Alignment.Center
-                    ) {
-                        CircularProgressIndicator()
-                    }
-                }
-                is Resource.Error -> {
-                    Box(
-                        modifier = Modifier.fillMaxSize(),
-                        contentAlignment = Alignment.Center
-                    ) {
-                        Column(
-                            horizontalAlignment = Alignment.CenterHorizontally,
-                            verticalArrangement = Arrangement.Center
-                        ) {
-                            Text(
-                                text = (tasksState as Resource.Error<List<Task>>).message ?: "Error loading tasks",
-                                color = MaterialTheme.colorScheme.error,
-                                textAlign = TextAlign.Center
-                            )
-                            Spacer(modifier = Modifier.height(16.dp))
-                            Button(
-                                onClick = { viewModel.refreshTasks() }
-                            ) {
-                                Text("Retry")
-                            }
-                        }
-                    }
-                }
-                is Resource.Success -> {
-                    val tasks = (tasksState as Resource.Success<List<Task>>).data ?: emptyList()
-                    if (tasks.isEmpty()) {
+        if (showQrScanner.value) {
+            QrScannerScreen(
+                onQrScanned = { qrValue ->
+                    searchText.value = qrValue
+                    viewModel.searchTasks(qrValue)
+                    isSearching.value = true
+                    showQrScanner.value = false
+                },
+                onCancel = { showQrScanner.value = false }
+            )
+        } else {
+            Box(
+                modifier = Modifier
+                    .fillMaxSize()
+                    .padding(padding)
+            ) {
+                when (tasksState) {
+                    is Resource.Loading -> {
                         Box(
                             modifier = Modifier.fillMaxSize(),
                             contentAlignment = Alignment.Center
                         ) {
-                            Text("No tasks available")
+                            CircularProgressIndicator()
                         }
-                    } else {
-                        LazyColumn(
-                            modifier = Modifier.fillMaxSize()
+                    }
+                    is Resource.Error -> {
+                        Box(
+                            modifier = Modifier.fillMaxSize(),
+                            contentAlignment = Alignment.Center
                         ) {
-                            items(tasks) { task ->
-                                TaskItem(task = task)
+                            Column(
+                                horizontalAlignment = Alignment.CenterHorizontally,
+                                verticalArrangement = Arrangement.Center
+                            ) {
+                                Text(
+                                    text = (tasksState as Resource.Error<List<Task>>).message ?: "Error loading tasks",
+                                    color = MaterialTheme.colorScheme.error,
+                                    textAlign = TextAlign.Center
+                                )
+                                Spacer(modifier = Modifier.height(16.dp))
+                                Button(
+                                    onClick = { viewModel.refreshTasks() }
+                                ) {
+                                    Text("Retry")
+                                }
+                            }
+                        }
+                    }
+                    is Resource.Success -> {
+                        val tasks = (tasksState as Resource.Success<List<Task>>).data ?: emptyList()
+                        if (tasks.isEmpty()) {
+                            Box(
+                                modifier = Modifier.fillMaxSize(),
+                                contentAlignment = Alignment.Center
+                            ) {
+                                Text("No tasks available")
+                            }
+                        } else {
+                            LazyColumn(
+                                modifier = Modifier.fillMaxSize()
+                            ) {
+                                items(tasks) { task ->
+                                    TaskItem(task = task)
+                                }
                             }
                         }
                     }
