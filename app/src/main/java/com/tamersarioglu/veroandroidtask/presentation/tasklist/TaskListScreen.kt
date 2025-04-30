@@ -31,6 +31,9 @@ import com.tamersarioglu.veroandroidtask.utils.Resource
 import androidx.compose.material3.Button
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.height
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.remember
+import androidx.compose.material3.TextField
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -39,14 +42,42 @@ fun TaskListScreen(
     onLogout: () -> Unit
 ) {
     val tasksState by viewModel.tasksState.collectAsState()
+    val searchQuery by viewModel.searchQuery.collectAsState()
+    val isSearching = remember { mutableStateOf(false) }
+    val searchText = remember { mutableStateOf("") }
 
     Scaffold(
         topBar = {
             TopAppBar(
-                title = { Text("Tasks") },
+                title = {
+                    if (isSearching.value) {
+                        TextField(
+                            value = searchText.value,
+                            onValueChange = {
+                                searchText.value = it
+                                viewModel.searchTasks(it)
+                            },
+                            placeholder = { Text("Search tasks...") },
+                            singleLine = true,
+                            modifier = Modifier.fillMaxSize()
+                        )
+                    } else {
+                        Text("Tasks")
+                    }
+                },
                 actions = {
-                    IconButton(onClick = { /* TODO: Implement search */ }) {
-                        Icon(Icons.Default.Search, contentDescription = "Search")
+                    if (isSearching.value) {
+                        IconButton(onClick = {
+                            isSearching.value = false
+                            searchText.value = ""
+                            viewModel.searchTasks("")
+                        }) {
+                            Icon(Icons.Default.Search, contentDescription = "Close Search")
+                        }
+                    } else {
+                        IconButton(onClick = { isSearching.value = true }) {
+                            Icon(Icons.Default.Search, contentDescription = "Search")
+                        }
                     }
                     IconButton(onClick = onLogout) {
                         Icon(Icons.AutoMirrored.Filled.Logout, contentDescription = "Logout")

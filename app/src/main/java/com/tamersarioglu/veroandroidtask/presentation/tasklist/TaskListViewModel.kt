@@ -6,6 +6,7 @@ import androidx.lifecycle.viewModelScope
 import com.tamersarioglu.veroandroidtask.domain.model.Task
 import com.tamersarioglu.veroandroidtask.domain.usecase.GetTasksUseCase
 import com.tamersarioglu.veroandroidtask.domain.usecase.RefreshTasksUseCase
+import com.tamersarioglu.veroandroidtask.domain.usecase.SearchTasksUseCase
 import com.tamersarioglu.veroandroidtask.utils.Resource
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.flow.MutableStateFlow
@@ -17,11 +18,15 @@ import javax.inject.Inject
 @HiltViewModel
 class TaskListViewModel @Inject constructor(
     private val getTasksUseCase: GetTasksUseCase,
-    private val refreshTasksUseCase: RefreshTasksUseCase
+    private val refreshTasksUseCase: RefreshTasksUseCase,
+    private val searchTasksUseCase: SearchTasksUseCase
 ) : ViewModel() {
 
     private val _tasksState = MutableStateFlow<Resource<List<Task>>>(Resource.Loading())
     val tasksState: StateFlow<Resource<List<Task>>> = _tasksState.asStateFlow()
+
+    private val _searchQuery = MutableStateFlow("")
+    val searchQuery: StateFlow<String> = _searchQuery.asStateFlow()
 
     init {
         loadTasks()
@@ -64,6 +69,15 @@ class TaskListViewModel @Inject constructor(
                 is Resource.Loading -> {
                     Log.d("TaskListViewModel", "Refreshing tasks...")
                 }
+            }
+        }
+    }
+
+    fun searchTasks(query: String) {
+        _searchQuery.value = query
+        viewModelScope.launch {
+            searchTasksUseCase(query).collect { resource ->
+                _tasksState.value = resource
             }
         }
     }
