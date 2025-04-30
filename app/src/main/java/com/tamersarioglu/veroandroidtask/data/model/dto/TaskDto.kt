@@ -13,7 +13,7 @@ data class TaskDto(
     val description: String?,
 
     @SerializedName("sort")
-    val sort: String?, // Kept as String as it appears as "0"
+    val sort: String?,
 
     @SerializedName("wageType")
     val wageType: String?,
@@ -28,13 +28,13 @@ data class TaskDto(
     val parentTaskID: String?,
 
     @SerializedName("preplanningBoardQuickSelect")
-    val preplanningBoardQuickSelect: String?, // Type inferred as String? due to null
+    val preplanningBoardQuickSelect: String?,
 
     @SerializedName("colorCode")
     val colorCode: String?,
 
     @SerializedName("workingTime")
-    val workingTime: String?, // Type inferred as String? due to null
+    val workingTime: String?,
 
     @SerializedName("isAvailableInTimeTrackingKioskMode")
     val isAvailableInTimeTrackingKioskMode: Boolean,

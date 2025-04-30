@@ -83,7 +83,6 @@ class TaskRepositoryImpl @Inject constructor(
             emit(Resource.Loading())
             dao.getAllTasks().collect { entities ->
                 if (entities.isEmpty()) {
-                    // If no tasks in database, try to refresh from API
                     val token = prefs.getString(Constants.AUTH_TOKEN_KEY, null)
                         ?: throw Exception("Not authenticated")
                     

@@ -20,7 +20,7 @@ class CustomWorkerFactory @Inject constructor(
             TaskSyncWorker::class.java.name -> {
                 TaskSyncWorker(appContext, workerParameters, refreshTasksUseCase)
             }
-            else -> null // Let the default factory handle other workers
+            else -> null
         }
     }
 } 

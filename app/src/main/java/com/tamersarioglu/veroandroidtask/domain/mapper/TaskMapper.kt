@@ -8,7 +8,7 @@ import java.util.UUID
 import androidx.core.graphics.toColorInt
 
 fun TaskDto.toEntity(): TaskEntity {
-    // Store any potential additional properties
+
     val additionalProps = mutableMapOf<String, String>()
 
     return TaskEntity(

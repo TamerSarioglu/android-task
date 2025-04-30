@@ -70,7 +70,7 @@ fun TaskListScreen(
                     if (isSearching.value) {
                         IconButton(onClick = {
                             isSearching.value = false
-                            viewModel.searchTasks("")  // Clear search directly
+                            viewModel.searchTasks("")
                         }) {
                             Icon(Icons.Default.Search, contentDescription = "Close Search")
                         }
@@ -92,7 +92,7 @@ fun TaskListScreen(
         if (showQrScanner.value) {
             QrScannerScreen(
                 onQrScanned = { qrValue ->
-                    viewModel.searchTasks(qrValue)  // Use ViewModel directly
+                    viewModel.searchTasks(qrValue)
                     isSearching.value = true
                     showQrScanner.value = false
                 },
@@ -151,7 +151,6 @@ fun TaskListScreen(
                                     modifier = Modifier.fillMaxSize(),
                                     contentAlignment = Alignment.Center
                                 ) {
-                                    // Display appropriate message based on whether user is searching
                                     if (searchQuery.isNotEmpty()) {
                                         Text("No tasks found for \"$searchQuery\"")
                                     } else {
