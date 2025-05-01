@@ -2,20 +2,31 @@ package com.tamersarioglu.veroandroidtask.data.repository
 
 import android.content.SharedPreferences
 import android.util.Log
+import androidx.core.content.edit
 import com.tamersarioglu.veroandroidtask.data.api.ApiService
 import com.tamersarioglu.veroandroidtask.data.local.TaskDao
 import com.tamersarioglu.veroandroidtask.data.model.dto.AuthRequest
+import com.tamersarioglu.veroandroidtask.domain.mapper.toEntity
+import com.tamersarioglu.veroandroidtask.domain.mapper.toTask
 import com.tamersarioglu.veroandroidtask.domain.model.Task
 import com.tamersarioglu.veroandroidtask.domain.repository.TaskRepository
 import com.tamersarioglu.veroandroidtask.utils.Constants
+import com.tamersarioglu.veroandroidtask.utils.Constants.AUTH_FAILED_API
+import com.tamersarioglu.veroandroidtask.utils.Constants.AUTH_FAILED_EXCEPTION
+import com.tamersarioglu.veroandroidtask.utils.Constants.AUTH_FAILED_TOKEN_NULL
+import com.tamersarioglu.veroandroidtask.utils.Constants.AUTH_SUCCESS_LOG
+import com.tamersarioglu.veroandroidtask.utils.Constants.ERROR_FETCH_FAILED
+import com.tamersarioglu.veroandroidtask.utils.Constants.ERROR_LOADING_TASKS
+import com.tamersarioglu.veroandroidtask.utils.Constants.ERROR_NOT_AUTHENTICATED
+import com.tamersarioglu.veroandroidtask.utils.Constants.ERROR_REFRESH_UNEXPECTED_STATE
+import com.tamersarioglu.veroandroidtask.utils.Constants.ERROR_REFRESH_UNKNOWN
+import com.tamersarioglu.veroandroidtask.utils.Constants.LOG_TAG_REPO
 import com.tamersarioglu.veroandroidtask.utils.Resource
+import com.tamersarioglu.veroandroidtask.utils.safeApiCall
 import kotlinx.coroutines.flow.Flow
-import javax.inject.Inject
-import androidx.core.content.edit
-import com.tamersarioglu.veroandroidtask.domain.mapper.toEntity
-import com.tamersarioglu.veroandroidtask.domain.mapper.toTask
-import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.flow.flow
+import kotlinx.coroutines.flow.map
+import javax.inject.Inject
 
 class TaskRepositoryImpl @Inject constructor(
     private val api: ApiService,
@@ -35,7 +46,7 @@ class TaskRepositoryImpl @Inject constructor(
                 val authToken = response.body()?.oauth?.access_token
                 if (authToken != null) {
 
-                    Log.d("TaskRepository", "Auth successful: ${response.body()}")
+                    Log.d(LOG_TAG_REPO, String.format(AUTH_SUCCESS_LOG, response.body().toString()))
 
                     prefs.edit {
                         putString(Constants.AUTH_TOKEN_KEY, authToken)
@@ -43,79 +54,64 @@ class TaskRepositoryImpl @Inject constructor(
 
                     Resource.Success(authToken)
                 } else {
-                    Resource.Error("Authentication failed: Token is null")
+                    Resource.Error(AUTH_FAILED_TOKEN_NULL)
                 }
             } else {
-                Resource.Error("Authentication failed: ${response.code()} ${response.message()}")
+                Resource.Error(String.format(AUTH_FAILED_API, response.code(), response.message()))
             }
         } catch (e: Exception) {
-            Resource.Error("Authentication failed: ${e.localizedMessage}")
+            Resource.Error(String.format(AUTH_FAILED_EXCEPTION, e.localizedMessage))
         }
     }
 
     override suspend fun refreshTasks(): Resource<Unit> {
         if (prefs.getString(Constants.AUTH_TOKEN_KEY, null) == null) {
-            return Resource.Error("Not authenticated")
+            return Resource.Error(ERROR_NOT_AUTHENTICATED)
         }
 
-        return try {
-            val response = api.getTasks()
+        val result = safeApiCall { api.getTasks() }
 
-            when {
-                response.isSuccessful -> {
-                    val tasks = response.body()
-                    when {
-                        tasks != null -> {
-                            val entities = tasks.map { it.toEntity() }
-                            dao.clearAllTasks()
-                            dao.insertTasks(entities)
-                            Resource.Success(Unit)
-                        }
-
-                        else -> {
-                            Resource.Error("Failed to fetch tasks: Response body is null")
-                        }
-                    }
-                }
-
-                else -> {
-                    Resource.Error("Failed to fetch tasks: ${response.code()} ${response.message()}")
-                }
+        return when (result) {
+            is Resource.Success -> {
+                val tasks = result.data
+                val entities = tasks!!.map { it.toEntity() }
+                dao.clearAllTasks()
+                dao.insertTasks(entities)
+                Resource.Success(Unit)
             }
-        } catch (e: Exception) {
-            Resource.Error("Failed to fetch tasks: ${e.localizedMessage}")
+            is Resource.Error -> {
+                Resource.Error(result.message ?: ERROR_REFRESH_UNKNOWN)
+            }
+            is Resource.Loading -> {
+                Resource.Error(ERROR_REFRESH_UNEXPECTED_STATE)
+            }
         }
     }
 
     override fun getTasks(): Flow<Resource<List<Task>>> = flow {
+        emit(Resource.Loading())
         try {
-            emit(Resource.Loading())
-            dao.getAllTasks().collect { entities ->
+            val localTasks = dao.getAllTasks()
+            localTasks.collect { entities ->
                 if (entities.isEmpty()) {
                     if (prefs.getString(Constants.AUTH_TOKEN_KEY, null) == null) {
-                        throw Exception("Not authenticated")
+                        emit(Resource.Error(ERROR_NOT_AUTHENTICATED))
+                        return@collect
                     }
 
-                    val response = api.getTasks()
-                    when {
-                        response.isSuccessful -> {
-                            val tasks = response.body()
-                            when {
-                                tasks != null -> {
-                                    val newEntities = tasks.map { it.toEntity() }
-                                    dao.clearAllTasks()
-                                    dao.insertTasks(newEntities)
-                                    emit(Resource.Success(newEntities.map { it.toTask() }))
-                                }
-
-                                else -> {
-                                    emit(Resource.Error("No tasks available"))
-                                }
-                            }
+                    when (val networkResult = safeApiCall { api.getTasks() }) {
+                        is Resource.Success -> {
+                            val tasksDto = networkResult.data
+                            val newEntities = tasksDto!!.map { it.toEntity() }
+                            dao.clearAllTasks()
+                            dao.insertTasks(newEntities)
+                            emit(Resource.Success(newEntities.map { it.toTask() }))
                         }
-
-                        else -> {
-                            emit(Resource.Error("Failed to fetch tasks: ${response.code()} ${response.message()}"))
+                        is Resource.Error -> {
+                            emit(Resource.Error(networkResult.message ?: ERROR_FETCH_FAILED))
+                        }
+                        is Resource.Loading -> {
+                            emit(Resource.Loading())
                         }
                     }
                 } else {
@@ -123,7 +119,7 @@ class TaskRepositoryImpl @Inject constructor(
                 }
             }
         } catch (e: Exception) {
-            emit(Resource.Error("Error loading tasks: ${e.message}"))
+            emit(Resource.Error(String.format(ERROR_LOADING_TASKS, e.message)))
         }
     }
 
