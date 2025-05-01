@@ -1,6 +1,9 @@
 package com.tamersarioglu.veroandroidtask.presentation.components
 
+import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.*
+import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.filled.Error
 import androidx.compose.material3.*
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
@@ -52,16 +55,39 @@ fun <T> ResourceStateView(
 
 @Composable
 fun DefaultLoadingIndicator() {
-    CircularProgressIndicator()
+    Box(
+        modifier = Modifier
+            .fillMaxWidth()
+            .padding(32.dp),
+        contentAlignment = Alignment.Center
+    ) {
+        CircularProgressIndicator(
+            color = MaterialTheme.colorScheme.primary,
+            strokeWidth = 4.dp
+        )
+    }
 }
 
 @Composable
 fun DefaultErrorContent(message: String, onRetry: (() -> Unit)?) {
     Column(
-        modifier = Modifier.padding(16.dp),
+        modifier = Modifier
+            .padding(24.dp)
+            .background(
+                color = MaterialTheme.colorScheme.error.copy(alpha = 0.08f),
+                shape = MaterialTheme.shapes.medium
+            )
+            .fillMaxWidth(),
         horizontalAlignment = Alignment.CenterHorizontally,
         verticalArrangement = Arrangement.Center
     ) {
+        Icon(
+            imageVector = Icons.Default.Error,
+            contentDescription = null,
+            tint = MaterialTheme.colorScheme.error,
+            modifier = Modifier.size(48.dp)
+        )
+        Spacer(modifier = Modifier.height(12.dp))
         Text(
             text = message,
             color = MaterialTheme.colorScheme.error,
@@ -69,9 +95,12 @@ fun DefaultErrorContent(message: String, onRetry: (() -> Unit)?) {
             style = MaterialTheme.typography.bodyLarge
         )
         onRetry?.let {
-            Spacer(modifier = Modifier.height(16.dp))
-            Button(onClick = it) {
-                Text("Retry")
+            Spacer(modifier = Modifier.height(20.dp))
+            Button(
+                onClick = it,
+                colors = ButtonDefaults.buttonColors(containerColor = MaterialTheme.colorScheme.primary)
+            ) {
+                Text("Retry", color = MaterialTheme.colorScheme.onPrimary)
             }
         }
     }
