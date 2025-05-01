@@ -7,6 +7,14 @@ import com.tamersarioglu.veroandroidtask.domain.model.Task
 import com.tamersarioglu.veroandroidtask.domain.usecase.GetTasksUseCase
 import com.tamersarioglu.veroandroidtask.domain.usecase.RefreshTasksUseCase
 import com.tamersarioglu.veroandroidtask.domain.usecase.SearchTasksUseCase
+import com.tamersarioglu.veroandroidtask.utils.Constants.ERROR_FAILED_TO_LOAD
+import com.tamersarioglu.veroandroidtask.utils.Constants.LOG_ERROR_LOADING
+import com.tamersarioglu.veroandroidtask.utils.Constants.LOG_ERROR_REFRESHING
+import com.tamersarioglu.veroandroidtask.utils.Constants.LOG_LOADING
+import com.tamersarioglu.veroandroidtask.utils.Constants.LOG_REFRESHING
+import com.tamersarioglu.veroandroidtask.utils.Constants.LOG_TAG
+import com.tamersarioglu.veroandroidtask.utils.Constants.LOG_TASKS_LOADED
+import com.tamersarioglu.veroandroidtask.utils.Constants.LOG_TASKS_REFRESHED
 import com.tamersarioglu.veroandroidtask.utils.Resource
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.flow.MutableStateFlow
@@ -21,17 +29,6 @@ class TaskListViewModel @Inject constructor(
     private val refreshTasksUseCase: RefreshTasksUseCase,
     private val searchTasksUseCase: SearchTasksUseCase
 ) : ViewModel() {
-
-    companion object {
-        private const val LOG_TAG = "TaskListViewModel"
-        private const val LOG_TASKS_LOADED = "Tasks loaded successfully: %d tasks"
-        private const val LOG_ERROR_LOADING = "Error loading tasks: %s"
-        private const val LOG_LOADING = "Loading tasks..."
-        private const val LOG_TASKS_REFRESHED = "Tasks refreshed successfully"
-        private const val LOG_ERROR_REFRESHING = "Error refreshing tasks: %s"
-        private const val LOG_REFRESHING = "Refreshing tasks..."
-        private const val ERROR_FAILED_TO_LOAD = "Failed to load tasks: %s"
-    }
 
     private val _tasksState = MutableStateFlow<Resource<List<Task>>>(Resource.Loading())
     val tasksState: StateFlow<Resource<List<Task>>> = _tasksState.asStateFlow()
