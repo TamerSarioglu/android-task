@@ -54,24 +54,33 @@ class TaskRepositoryImpl @Inject constructor(
     }
 
     override suspend fun refreshTasks(): Resource<Unit> {
-        val token = prefs.getString(Constants.AUTH_TOKEN_KEY, null)
-            ?: return Resource.Error("Not authenticated")
+        if (prefs.getString(Constants.AUTH_TOKEN_KEY, null) == null) {
+            return Resource.Error("Not authenticated")
+        }
 
         return try {
             val response = api.getTasks()
 
-            if (response.isSuccessful) {
-                val tasks = response.body()
-                if (tasks != null) {
-                    val entities = tasks.map { it.toEntity() }
-                    dao.clearAllTasks()
-                    dao.insertTasks(entities)
-                    Resource.Success(Unit)
-                } else {
-                    Resource.Error("Failed to fetch tasks: Response body is null")
+            when {
+                response.isSuccessful -> {
+                    val tasks = response.body()
+                    when {
+                        tasks != null -> {
+                            val entities = tasks.map { it.toEntity() }
+                            dao.clearAllTasks()
+                            dao.insertTasks(entities)
+                            Resource.Success(Unit)
+                        }
+
+                        else -> {
+                            Resource.Error("Failed to fetch tasks: Response body is null")
+                        }
+                    }
                 }
-            } else {
-                Resource.Error("Failed to fetch tasks: ${response.code()} ${response.message()}")
+
+                else -> {
+                    Resource.Error("Failed to fetch tasks: ${response.code()} ${response.message()}")
+                }
             }
         } catch (e: Exception) {
             Resource.Error("Failed to fetch tasks: ${e.localizedMessage}")
@@ -83,22 +92,31 @@ class TaskRepositoryImpl @Inject constructor(
             emit(Resource.Loading())
             dao.getAllTasks().collect { entities ->
                 if (entities.isEmpty()) {
-                    val token = prefs.getString(Constants.AUTH_TOKEN_KEY, null)
-                        ?: throw Exception("Not authenticated")
-                    
+                    if (prefs.getString(Constants.AUTH_TOKEN_KEY, null) == null) {
+                        throw Exception("Not authenticated")
+                    }
+
                     val response = api.getTasks()
-                    if (response.isSuccessful) {
-                        val tasks = response.body()
-                        if (tasks != null) {
-                            val newEntities = tasks.map { it.toEntity() }
-                            dao.clearAllTasks()
-                            dao.insertTasks(newEntities)
-                            emit(Resource.Success(newEntities.map { it.toTask() }))
-                        } else {
-                            emit(Resource.Error("No tasks available"))
+                    when {
+                        response.isSuccessful -> {
+                            val tasks = response.body()
+                            when {
+                                tasks != null -> {
+                                    val newEntities = tasks.map { it.toEntity() }
+                                    dao.clearAllTasks()
+                                    dao.insertTasks(newEntities)
+                                    emit(Resource.Success(newEntities.map { it.toTask() }))
+                                }
+
+                                else -> {
+                                    emit(Resource.Error("No tasks available"))
+                                }
+                            }
                         }
-                    } else {
-                        emit(Resource.Error("Failed to fetch tasks: ${response.code()} ${response.message()}"))
+
+                        else -> {
+                            emit(Resource.Error("Failed to fetch tasks: ${response.code()} ${response.message()}"))
+                        }
                     }
                 } else {
                     emit(Resource.Success(entities.map { it.toTask() }))
