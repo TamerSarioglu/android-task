@@ -73,6 +73,7 @@ class TaskListViewModel @Inject constructor(
             when (val result = refreshTasksUseCase()) {
                 is Resource.Success -> {
                     Log.d(LOG_TAG, LOG_TASKS_REFRESHED)
+                    loadTasks()
                 }
                 is Resource.Error -> {
                     Log.e(LOG_TAG, String.format(LOG_ERROR_REFRESHING, result.message))
