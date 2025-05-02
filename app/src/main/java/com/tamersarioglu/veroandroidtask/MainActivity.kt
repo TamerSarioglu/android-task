@@ -8,12 +8,7 @@ import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Surface
 import androidx.compose.ui.Modifier
-import androidx.hilt.navigation.compose.hiltViewModel
-import androidx.navigation.compose.NavHost
-import androidx.navigation.compose.composable
-import androidx.navigation.compose.rememberNavController
-import com.tamersarioglu.veroandroidtask.presentation.login.LoginScreen
-import com.tamersarioglu.veroandroidtask.presentation.tasklist.TaskListScreen
+import com.tamersarioglu.veroandroidtask.presentation.AppNavigation
 import com.tamersarioglu.veroandroidtask.presentation.ui.theme.VeroAndroidTaskTheme
 import dagger.hilt.android.AndroidEntryPoint
 
@@ -28,32 +23,7 @@ class MainActivity : ComponentActivity() {
                     modifier = Modifier.fillMaxSize(),
                     color = MaterialTheme.colorScheme.background
                 ) {
-                    val navController = rememberNavController()
-
-                    NavHost(
-                        navController = navController,
-                        startDestination = "login"
-                    ) {
-                        composable("login") {
-                            LoginScreen(
-                                onLoginSuccess = {
-                                    navController.navigate("tasklist") {
-                                        popUpTo("login") { inclusive = true }
-                                    }
-                                }
-                            )
-                        }
-
-                        composable("tasklist") {
-                            TaskListScreen(
-                                onLogout = {
-                                    navController.navigate("login") {
-                                        popUpTo("tasklist") { inclusive = true }
-                                    }
-                                }
-                            )
-                        }
-                    }
+                    AppNavigation()
                 }
             }
         }
