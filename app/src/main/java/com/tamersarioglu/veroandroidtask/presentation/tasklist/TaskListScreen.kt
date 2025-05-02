@@ -44,6 +44,14 @@ import com.tamersarioglu.veroandroidtask.presentation.components.DefaultErrorCon
 import com.tamersarioglu.veroandroidtask.presentation.components.ResourceStateView
 import com.tamersarioglu.veroandroidtask.presentation.components.TaskItem
 import com.tamersarioglu.veroandroidtask.presentation.qrscanner.QrScannerScreen
+import android.Manifest
+import android.content.pm.PackageManager
+import androidx.activity.compose.rememberLauncherForActivityResult
+import androidx.activity.result.contract.ActivityResultContracts
+import androidx.compose.material3.AlertDialog
+import androidx.compose.material3.Button
+import androidx.compose.ui.platform.LocalContext
+import androidx.core.content.ContextCompat
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -55,13 +63,37 @@ fun TaskListScreen(
     val searchQuery by viewModel.searchQuery.collectAsState()
     val isSearching = remember { mutableStateOf(false) }
     val showQrScanner = remember { mutableStateOf(false) }
+    val showPermissionRationale = remember { mutableStateOf(false) }
+    val context = LocalContext.current
+
+    val requestPermissionLauncher = rememberLauncherForActivityResult(
+        contract = ActivityResultContracts.RequestPermission(),
+        onResult = { isGranted: Boolean ->
+            if (isGranted) {
+                showQrScanner.value = true
+            } else {
+                showPermissionRationale.value = true
+            }
+        }
+    )
+
+    fun checkAndRequestCameraPermission() {
+        when (PackageManager.PERMISSION_GRANTED) {
+            ContextCompat.checkSelfPermission(context, Manifest.permission.CAMERA) -> {
+                showQrScanner.value = true
+            }
+            else -> {
+                requestPermissionLauncher.launch(Manifest.permission.CAMERA)
+            }
+        }
+    }
 
     Scaffold(
         topBar = {
             TaskListTopBar(
                 isSearching = isSearching.value,
                 onSearchClick = { isSearching.value = !isSearching.value },
-                onQrClick = { showQrScanner.value = true },
+                onQrClick = { checkAndRequestCameraPermission() },
                 onLogout = onLogout
             )
         }
@@ -119,6 +151,21 @@ fun TaskListScreen(
                     )
                 }
             }
+        }
+
+        if (showPermissionRationale.value) {
+            AlertDialog(
+                onDismissRequest = { showPermissionRationale.value = false },
+                title = { Text("Camera Permission Required") },
+                text = { Text("This app needs camera access to scan QR codes. Please grant the permission.") },
+                confirmButton = {
+                    Button(onClick = {
+                        showPermissionRationale.value = false
+                    }) {
+                        Text("OK")
+                    }
+                }
+            )
         }
     }
 }
