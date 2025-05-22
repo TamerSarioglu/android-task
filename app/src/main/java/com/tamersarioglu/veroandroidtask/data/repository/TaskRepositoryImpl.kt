@@ -70,16 +70,12 @@ class TaskRepositoryImpl @Inject constructor(
             return Resource.Error(ERROR_NOT_AUTHENTICATED)
         }
 
-        // First check if there are tasks in the local database
         val localTasksCount = dao.getTasksCount()
-        
-        // If there are local tasks, return success without making API call
         if (localTasksCount > 0) {
             Log.d(LOG_TAG_REPO, LOG_USING_LOCAL_TASKS)
             return Resource.Success(Unit)
         }
         
-        // If no local tasks, try to fetch from API
         val result = safeApiCall { api.getTasks() }
 
         return when (result) {
