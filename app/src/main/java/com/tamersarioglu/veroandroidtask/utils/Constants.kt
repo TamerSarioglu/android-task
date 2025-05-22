@@ -30,4 +30,5 @@ object Constants {
     const val ERROR_API_NULL_BODY = "API call successful but response body was null"
     const val ERROR_API_FAILED = "API call failed: %d %s"
     const val ERROR_UNEXPECTED = "An unexpected error occurred: %s"
+    const val LOG_USING_LOCAL_TASKS = "Using existing local tasks"
 }
