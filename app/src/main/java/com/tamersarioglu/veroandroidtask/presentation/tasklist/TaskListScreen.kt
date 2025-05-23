@@ -78,7 +78,10 @@ fun TaskListScreen(
                 isSearching = isSearching.value,
                 onSearchClick = { isSearching.value = !isSearching.value },
                 onQrClick = { checkAndRequestCameraPermission() },
-                onLogout = onLogout
+                onLogout = {
+                    viewModel.logout()
+                    onLogout()
+                }
             )
         }
     ) { padding ->

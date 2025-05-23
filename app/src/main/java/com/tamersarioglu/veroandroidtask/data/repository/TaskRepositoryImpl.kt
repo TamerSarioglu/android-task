@@ -65,6 +65,18 @@ class TaskRepositoryImpl @Inject constructor(
         }
     }
 
+    override suspend fun logout() {
+        prefs.edit {
+            remove(Constants.AUTH_TOKEN_KEY)
+        }
+        dao.clearAllTasks()
+        Log.d(LOG_TAG_REPO, "User logged out successfully")
+    }
+
+    override fun isAuthenticated(): Boolean {
+        return prefs.getString(Constants.AUTH_TOKEN_KEY, null) != null
+    }
+
     override suspend fun refreshTasks(): Resource<Unit> {
         if (prefs.getString(Constants.AUTH_TOKEN_KEY, null) == null) {
             return Resource.Error(ERROR_NOT_AUTHENTICATED)

@@ -5,6 +5,7 @@ import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.tamersarioglu.veroandroidtask.domain.model.Task
 import com.tamersarioglu.veroandroidtask.domain.usecase.GetTasksUseCase
+import com.tamersarioglu.veroandroidtask.domain.usecase.LogoutUseCase
 import com.tamersarioglu.veroandroidtask.domain.usecase.RefreshTasksUseCase
 import com.tamersarioglu.veroandroidtask.domain.usecase.SearchTasksUseCase
 import com.tamersarioglu.veroandroidtask.utils.Constants.ERROR_FAILED_TO_LOAD
@@ -27,7 +28,8 @@ import javax.inject.Inject
 class TaskListViewModel @Inject constructor(
     private val getTasksUseCase: GetTasksUseCase,
     private val refreshTasksUseCase: RefreshTasksUseCase,
-    private val searchTasksUseCase: SearchTasksUseCase
+    private val searchTasksUseCase: SearchTasksUseCase,
+    private val logoutUseCase: LogoutUseCase
 ) : ViewModel() {
 
     private val _tasksState = MutableStateFlow<Resource<List<Task>>>(Resource.Loading())
@@ -88,6 +90,14 @@ class TaskListViewModel @Inject constructor(
             searchTasksUseCase(query).collect { resource ->
                 _tasksState.value = resource
             }
+        }
+    }
+
+    fun logout() {
+        viewModelScope.launch {
+            logoutUseCase()
+            _tasksState.value = Resource.Loading()
+            _searchQuery.value = ""
         }
     }
 }
