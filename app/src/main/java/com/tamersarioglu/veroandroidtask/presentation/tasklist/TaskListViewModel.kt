@@ -18,6 +18,7 @@ import com.tamersarioglu.veroandroidtask.utils.Constants.LOG_TASKS_LOADED
 import com.tamersarioglu.veroandroidtask.utils.Constants.LOG_TASKS_REFRESHED
 import com.tamersarioglu.veroandroidtask.utils.Resource
 import dagger.hilt.android.lifecycle.HiltViewModel
+import kotlinx.coroutines.Job
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
@@ -38,21 +39,31 @@ class TaskListViewModel @Inject constructor(
     private val _searchQuery = MutableStateFlow("")
     val searchQuery: StateFlow<String> = _searchQuery.asStateFlow()
 
+    private var loadTasksJob: Job? = null
+    private var isLoggingOut = false
+
     init {
         loadTasks()
     }
 
     private fun loadTasks() {
-        viewModelScope.launch {
+        if (isLoggingOut) return
+        
+        loadTasksJob?.cancel()
+        loadTasksJob = viewModelScope.launch {
             try {
                 getTasksUseCase().collect { resource ->
+                    if (isLoggingOut) return@collect
+                    
                     _tasksState.value = resource
                     when (resource) {
                         is Resource.Success -> {
                             Log.d(LOG_TAG, String.format(LOG_TASKS_LOADED, resource.data?.size ?: 0))
                         }
                         is Resource.Error -> {
-                            Log.e(LOG_TAG, String.format(LOG_ERROR_LOADING, resource.message))
+                            if (!isLoggingOut) {
+                                Log.e(LOG_TAG, String.format(LOG_ERROR_LOADING, resource.message))
+                            }
                         }
                         is Resource.Loading -> {
                             Log.d(LOG_TAG, LOG_LOADING)
@@ -60,13 +71,17 @@ class TaskListViewModel @Inject constructor(
                     }
                 }
             } catch (e: Exception) {
-                _tasksState.value = Resource.Error(String.format(ERROR_FAILED_TO_LOAD, e.message))
-                Log.e(LOG_TAG, String.format(ERROR_FAILED_TO_LOAD, e.message))
+                if (!isLoggingOut) {
+                    _tasksState.value = Resource.Error(String.format(ERROR_FAILED_TO_LOAD, e.message))
+                    Log.e(LOG_TAG, String.format(ERROR_FAILED_TO_LOAD, e.message))
+                }
             }
         }
     }
 
     fun refreshTasks() {
+        if (isLoggingOut) return
+        
         viewModelScope.launch {
             _tasksState.value = Resource.Loading()
             when (val result = refreshTasksUseCase()) {
@@ -85,19 +100,29 @@ class TaskListViewModel @Inject constructor(
     }
 
     fun searchTasks(query: String) {
+        if (isLoggingOut) return
+        
         _searchQuery.value = query
         viewModelScope.launch {
             searchTasksUseCase(query).collect { resource ->
-                _tasksState.value = resource
+                if (!isLoggingOut) {
+                    _tasksState.value = resource
+                }
             }
         }
     }
 
     fun logout() {
+        isLoggingOut = true
+        loadTasksJob?.cancel()
+        
         viewModelScope.launch {
-            logoutUseCase()
+            // Set loading state immediately to prevent error states
             _tasksState.value = Resource.Loading()
             _searchQuery.value = ""
+            
+            // Perform logout
+            logoutUseCase()
         }
     }
 }

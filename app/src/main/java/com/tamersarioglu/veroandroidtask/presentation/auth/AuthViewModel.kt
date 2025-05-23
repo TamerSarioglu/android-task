@@ -1,11 +1,14 @@
 package com.tamersarioglu.veroandroidtask.presentation.auth
 
 import androidx.lifecycle.ViewModel
+import androidx.lifecycle.viewModelScope
 import com.tamersarioglu.veroandroidtask.domain.usecase.IsAuthenticatedUseCase
 import dagger.hilt.android.lifecycle.HiltViewModel
+import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
+import kotlinx.coroutines.launch
 import javax.inject.Inject
 
 @HiltViewModel
@@ -34,7 +37,11 @@ class AuthViewModel @Inject constructor(
     }
 
     fun onLogout() {
-        _authState.value = AuthState.Unauthenticated
+        viewModelScope.launch {
+            _authState.value = AuthState.Loading
+            delay(100)
+            _authState.value = AuthState.Unauthenticated
+        }
     }
 }
 
