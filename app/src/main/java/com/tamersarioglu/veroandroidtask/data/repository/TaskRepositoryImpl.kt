@@ -21,6 +21,7 @@ import com.tamersarioglu.veroandroidtask.utils.Constants.ERROR_NOT_AUTHENTICATED
 import com.tamersarioglu.veroandroidtask.utils.Constants.ERROR_REFRESH_UNEXPECTED_STATE
 import com.tamersarioglu.veroandroidtask.utils.Constants.ERROR_REFRESH_UNKNOWN
 import com.tamersarioglu.veroandroidtask.utils.Constants.LOG_TAG_REPO
+import com.tamersarioglu.veroandroidtask.utils.Constants.LOG_USING_LOCAL_TASKS
 import com.tamersarioglu.veroandroidtask.utils.Resource
 import com.tamersarioglu.veroandroidtask.utils.safeApiCall
 import kotlinx.coroutines.flow.Flow
@@ -69,6 +70,12 @@ class TaskRepositoryImpl @Inject constructor(
             return Resource.Error(ERROR_NOT_AUTHENTICATED)
         }
 
+        val localTasksCount = dao.getTasksCount()
+        if (localTasksCount > 0) {
+            Log.d(LOG_TAG_REPO, LOG_USING_LOCAL_TASKS)
+            return Resource.Success(Unit)
+        }
+        
         val result = safeApiCall { api.getTasks() }
 
         return when (result) {

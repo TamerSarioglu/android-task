@@ -1,23 +1,17 @@
 package com.tamersarioglu.veroandroidtask
 
 import android.app.Application
-import androidx.work.Configuration
 import androidx.work.Constraints
 import androidx.work.ExistingPeriodicWorkPolicy
 import androidx.work.NetworkType
 import androidx.work.PeriodicWorkRequestBuilder
 import androidx.work.WorkManager
-import com.tamersarioglu.veroandroidtask.data.worker.CustomWorkerFactory
 import com.tamersarioglu.veroandroidtask.data.worker.TaskSyncWorker
 import dagger.hilt.android.HiltAndroidApp
 import java.util.concurrent.TimeUnit
-import javax.inject.Inject
 
 @HiltAndroidApp
-class VeroAndroidBaseApp: Application() {
-
-    @Inject
-    lateinit var customWorkerFactory: CustomWorkerFactory
+class VeroAndroidBaseApp : Application() {
 
     override fun onCreate() {
         super.onCreate()
